@@ -1,0 +1,95 @@
+# Shipdeck Implementation Plan
+
+**Goal:** Build an SSH-first, open source Docker deployment manager for a single VPS, with a Bubble Tea TUI, a local HTTP API, and a modular Go backend.
+
+**Architecture:** Shipdeck is split into small Go packages with clear boundaries: SSH/session wiring, TUI presentation, deployment domain logic, registry/source adapters, SQLite state, local API, and Docker execution adapters. The TUI and API are thin clients over the same service layer, and future-changing systems like Docker access, registry lookups, update checks, and secret storage are isolated behind interfaces so they can evolve without rewriting the core.
+
+**Tech Stack:** Go, Bubble Tea, Wish, SQLite, Docker Engine API/CLI hybrid, OpenAPI for `/api/v1`.
+
+---
+
+### Task 1: Foundation and wiring
+
+**Files:**
+- `cmd/shipdeck/main.go`
+- `internal/app/app.go`
+- `internal/app/wire.go`
+- `internal/config/config.go`
+- `internal/state/store.go`
+
+Start by writing a small test that proves the composition root can build the app from config without reaching into SSH, Docker, or SQLite internals directly. Then wire the top-level constructors and config shape only as far as needed to assemble the app. Keep this task focused on bootstrapping and dependency boundaries.
+
+### Task 2: SSH entrypoint and TUI shell
+
+**Files:**
+- `internal/session/server.go`
+- `internal/session/auth.go`
+- `internal/ui/model.go`
+- `internal/ui/view.go`
+- `internal/ui/update.go`
+
+Add tests that prove valid SSH keys start a Bubble Tea session and invalid keys are rejected. Implement the Wish server, key lookup, and a minimal TUI shell that can render a placeholder dashboard. Keep the session layer separate from presentation.
+
+### Task 3: Project model and SQLite persistence
+
+**Files:**
+- `internal/deploy/project.go`
+- `internal/deploy/service.go`
+- `internal/state/sqlite.go`
+- `internal/state/migrations/*.sql`
+- `internal/state/repository.go`
+
+Add repository tests for creating, loading, and updating a project with images, watched tags, credentials, and per-project update settings. Then implement the SQLite schema and repository methods needed for project CRUD and secret references. SQLite is the source of truth for project metadata and update state.
+
+### Task 4: Docker adapter and deployment engine
+
+**Files:**
+- `internal/adapters/docker/client.go`
+- `internal/adapters/docker/cli.go`
+- `internal/adapters/docker/api.go`
+- `internal/deploy/engine.go`
+- `internal/deploy/rollback.go`
+- `internal/deploy/strategy.go`
+
+Write tests for start, stop, redeploy, and rollback behavior against a fake Docker adapter. Implement the hybrid Docker backend and the deployment engine with a global deployment strategy. Compose-style projects should be manageable through one domain service.
+
+### Task 5: Registry/source monitoring and update checks
+
+**Files:**
+- `internal/sources/registry.go`
+- `internal/sources/digests.go`
+- `internal/update/checker.go`
+- `internal/update/scheduler.go`
+- `internal/update/notifications.go`
+
+Add tests proving a project with watched tags detects a newer digest, records it, and surfaces it as an available update without auto-applying it unless enabled. Implement per-project scheduled checks, OR semantics for watched tags, manual refresh, and optional auto-update behavior.
+
+### Task 6: HTTP API and DTO boundary
+
+**Files:**
+- `internal/api/server.go`
+- `internal/api/routes.go`
+- `internal/api/dto/*.go`
+- `internal/api/openapi.yaml` or generated spec output
+
+Add API contract tests for versioned routes, read endpoints, and internal-only write action handling. Expose `/api/v1`, generate OpenAPI, map internal models to DTOs, and keep write operations behind the service layer. The API should have its own contract and not leak TUI-only state.
+
+### Task 7: TUI project workflows
+
+**Files:**
+- `internal/ui/model.go`
+- `internal/ui/update.go`
+- `internal/ui/view.go`
+- `internal/ui/projects/*.go`
+
+Add UI tests for dashboard-first navigation, project creation/edit/import, log viewing modes, and manual refresh. Implement the dashboard, project list, project detail, images, logs, and settings screens with keyboard and mouse support. Make the TUI usable for creating, editing, importing, and inspecting projects.
+
+### Task 8: Open source readiness
+
+**Files:**
+- `README.md`
+- `.github/ISSUE_TEMPLATE/*.md`
+- `.github/PULL_REQUEST_TEMPLATE.md`
+- `LICENSE`
+
+Add the repo-facing OSS basics after the core MVP is stable. Keep the README focused on the product value and make sure the repository is ready for public iteration without overbuilding launch infrastructure.

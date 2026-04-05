@@ -1,0 +1,12 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/shipdeck ./cmd/shipdeck"
+  bin = "./tmp/shipdeck"
+  include_ext = ["go", "tmpl", "html"]
+  exclude_dir = ["tmp", "bin", ".git"]
+  delay = 1000
+
+[log]
+  time = true
