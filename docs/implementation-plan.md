@@ -19,6 +19,8 @@
 
 Start by writing a small test that proves the composition root can build the app from config without reaching into SSH, Docker, or SQLite internals directly. Then wire the top-level constructors and config shape only as far as needed to assemble the app. Keep this task focused on bootstrapping and dependency boundaries.
 
+Status: the initial constructor wiring and proof test are in place. The current implementation loads config, creates the logger, opens SQLite, runs migrations, and starts the app through `internal/app.Wire(...)`.
+
 ### Task 2: SSH entrypoint and TUI shell
 
 **Files:**
