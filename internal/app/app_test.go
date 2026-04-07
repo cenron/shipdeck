@@ -16,7 +16,7 @@ func TestNewWiresDependencies(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 	store := &state.Store{}
 
-	a := New(cfg, log, store)
+	a := NewApp(cfg, log, store)
 	if a == nil {
 		t.Fatal("expected app instance")
 	}

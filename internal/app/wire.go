@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/cenron/shipdeck/internal/config"
+	"github.com/cenron/shipdeck/internal/session"
 	"github.com/cenron/shipdeck/internal/state"
 	"github.com/jmoiron/sqlx"
 )
@@ -30,6 +31,12 @@ func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 
 	a := NewApp(&cfg, log, store)
 	err = a.Run()
+	if err != nil {
+		return err
+	}
+
+	server := session.NewServer(ctx, cfg)
+	err = server.Run()
 	if err != nil {
 		return err
 	}

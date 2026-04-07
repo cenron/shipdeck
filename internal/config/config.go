@@ -5,13 +5,15 @@ import (
 )
 
 type Config struct {
-	DBPath string
+	DBPath             string
+	AuthorizedKeysPath string
 }
 
 func Load() (Config, error) {
 
 	cfg := Config{
-		DBPath: envOrDefault("DB_PATH", "./data/shipdeck.sqlite"),
+		DBPath:             envOrDefault("DB_PATH", "./data/shipdeck.sqlite"),
+		AuthorizedKeysPath: envOrDefault("AUTHORIZED_KEYS_PATH", "./data/authorized_keys"),
 	}
 	return cfg, nil
 }
