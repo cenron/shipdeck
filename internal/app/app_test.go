@@ -30,3 +30,10 @@ func TestNewWiresDependencies(t *testing.T) {
 		t.Fatalf("expected store %p, got %p", store, a.store)
 	}
 }
+
+func TestAppRun(t *testing.T) {
+	a := NewApp(&config.Config{}, slog.New(slog.NewTextHandler(io.Discard, nil)), &state.Store{})
+	if err := a.Run(); err != nil {
+		t.Fatalf("Run() returned error: %v", err)
+	}
+}

@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net"
 	"path/filepath"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
-	"charm.land/log/v2"
 	"charm.land/wish/v2"
 	"charm.land/wish/v2/activeterm"
 	"charm.land/wish/v2/bubbletea"
@@ -21,10 +21,11 @@ import (
 
 type Server struct {
 	ctx    context.Context
-	config config.Config
+	log    *slog.Logger
+	config *config.Config
 }
 
-func NewServer(ctx context.Context, cfg config.Config) *Server {
+func NewServer(ctx context.Context, cfg *config.Config) *Server {
 	return &Server{
 		ctx:    ctx,
 		config: cfg,
@@ -52,10 +53,10 @@ func (s *Server) Run() error {
 	}
 
 	errChan := make(chan error, 1)
-	log.Info("Starting SSH server", "host", s.config.Host, "port", s.config.Port)
+	s.log.Info("Starting SSH server", "host", s.config.Host, "port", s.config.Port)
 	go func() {
 		if listenErr := serv.ListenAndServe(); listenErr != nil && !errors.Is(listenErr, ssh.ErrServerClosed) {
-			log.Error("Could not start server", "error", listenErr)
+			s.log.Error("Could not start server", "error", listenErr)
 			errChan <- listenErr
 		}
 	}()

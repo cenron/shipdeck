@@ -35,7 +35,7 @@ func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 		return err
 	}
 
-	server := session.NewServer(ctx, cfg)
+	server := session.NewServer(ctx, &cfg)
 	err = server.Run()
 	if err != nil {
 		return err

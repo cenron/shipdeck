@@ -12,10 +12,13 @@ import (
 	"github.com/cenron/shipdeck/internal/logging"
 )
 
+var runFn = run
+var exitFn = os.Exit
+
 func main() {
-	if err := run(); err != nil {
+	if err := runFn(); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)
-		os.Exit(1)
+		exitFn(1)
 	}
 }
 func run() error {

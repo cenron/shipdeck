@@ -10,6 +10,7 @@ bin/
 tmp/
 *.test
 coverage.out
+cover.out
 *.coverprofile
 
 # GoLand / JetBrains
@@ -22,3 +23,7 @@ out/
 
 # Local SSH auth keys
 data/authorized_keys
+id_ed25519
+id_ed25519.pub
+**/id_ed25519
+**/id_ed25519.pub
