@@ -8,15 +8,15 @@ import (
 	"path/filepath"
 	"time"
 
+	tea "charm.land/bubbletea/v2"
 	"charm.land/log/v2"
 	"charm.land/wish/v2"
+	"charm.land/wish/v2/activeterm"
+	"charm.land/wish/v2/bubbletea"
+	"charm.land/wish/v2/logging"
 	"github.com/cenron/shipdeck/internal/config"
+	"github.com/cenron/shipdeck/internal/ui"
 	"github.com/charmbracelet/ssh"
-)
-
-const (
-	host = "localhost"
-	port = "23234"
 )
 
 type Server struct {
@@ -38,8 +38,13 @@ func (s *Server) Run() error {
 	}
 
 	serv, err := wish.NewServer(
-		wish.WithAddress(net.JoinHostPort(host, port)),
+		wish.WithAddress(net.JoinHostPort(s.config.Host, s.config.Port)),
 		wish.WithAuthorizedKeys(authKeys),
+		wish.WithMiddleware(
+			bubbletea.Middleware(teaHandler),
+			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
+			logging.Middleware(),
+		),
 	)
 
 	if err != nil {
@@ -47,11 +52,11 @@ func (s *Server) Run() error {
 	}
 
 	errChan := make(chan error, 1)
-	log.Info("Starting SSH server", "host", host, "port", port)
+	log.Info("Starting SSH server", "host", s.config.Host, "port", s.config.Port)
 	go func() {
-		if err = serv.ListenAndServe(); err != nil && !errors.Is(err, ssh.ErrServerClosed) {
-			log.Error("Could not start server", "error", err)
-			errChan <- err
+		if listenErr := serv.ListenAndServe(); listenErr != nil && !errors.Is(listenErr, ssh.ErrServerClosed) {
+			log.Error("Could not start server", "error", listenErr)
+			errChan <- listenErr
 		}
 	}()
 
@@ -63,4 +68,10 @@ func (s *Server) Run() error {
 	case err := <-errChan:
 		return err
 	}
+}
+
+func teaHandler(s ssh.Session) (tea.Model, []tea.ProgramOption) {
+	pty, _, _ := s.Pty()
+	m := ui.New(pty.Window.Width, pty.Window.Height)
+	return m, []tea.ProgramOption{}
 }

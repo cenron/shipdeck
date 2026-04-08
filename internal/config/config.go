@@ -5,6 +5,8 @@ import (
 )
 
 type Config struct {
+	Host               string
+	Port               string
 	DBPath             string
 	AuthorizedKeysPath string
 }
@@ -12,6 +14,8 @@ type Config struct {
 func Load() (Config, error) {
 
 	cfg := Config{
+		Host:               envOrDefault("HOST", "0.0.0.0"),
+		Port:               envOrDefault("PORT", "2222"),
 		DBPath:             envOrDefault("DB_PATH", "./data/shipdeck.sqlite"),
 		AuthorizedKeysPath: envOrDefault("AUTHORIZED_KEYS_PATH", "./data/authorized_keys"),
 	}
