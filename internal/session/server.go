@@ -15,6 +15,7 @@ import (
 	"charm.land/wish/v2/bubbletea"
 	"charm.land/wish/v2/logging"
 	"github.com/cenron/shipdeck/internal/config"
+	logger "github.com/cenron/shipdeck/internal/logging"
 	"github.com/cenron/shipdeck/internal/ui"
 	"github.com/charmbracelet/ssh"
 )
@@ -25,9 +26,10 @@ type Server struct {
 	config *config.Config
 }
 
-func NewServer(ctx context.Context, cfg *config.Config) *Server {
+func NewServer(ctx context.Context, log *slog.Logger, cfg *config.Config) *Server {
 	return &Server{
 		ctx:    ctx,
+		log:    log,
 		config: cfg,
 	}
 }
@@ -44,7 +46,7 @@ func (s *Server) Run() error {
 		wish.WithMiddleware(
 			bubbletea.Middleware(teaHandler),
 			activeterm.Middleware(), // Bubble Tea apps usually require a PTY.
-			logging.Middleware(),
+			logging.MiddlewareWithLogger(logger.WishMiddleware{Logger: s.log}),
 		),
 	)
 

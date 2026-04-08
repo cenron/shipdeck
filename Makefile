@@ -6,7 +6,7 @@ build:
 	go build -o bin/$(APP_NAME) ./cmd/shipdeck
 
 run:
-	go run ./cmd/shipdeck
+	air
 
 test:
 	go test ./...

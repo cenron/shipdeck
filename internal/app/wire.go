@@ -14,7 +14,7 @@ import (
 
 func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 	// Create our store
-	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0o755); err != nil {
+	if err := os.MkdirAll(filepath.Dir(cfg.DBPath), 0755); err != nil {
 		return err
 	}
 
@@ -35,7 +35,7 @@ func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 		return err
 	}
 
-	server := session.NewServer(ctx, &cfg)
+	server := session.NewServer(ctx, log, &cfg)
 	err = server.Run()
 	if err != nil {
 		return err
