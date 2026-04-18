@@ -21,9 +21,9 @@ Implementation in this repo follows pair-programming navigator mode.
 
 Keep this section updated as work moves so new sessions can continue smoothly.
 
-- Current direction: stabilize core deployment path from SSH session to persisted project state.
-- Current slice: Task 3 project model and SQLite persistence.
-- Success signal: create, load, and update project metadata through repository tests.
+- Current direction: complete Task 4 by wiring deploy service orchestration to a concrete Docker adapter.
+- Current slice: Task 4 service layer plus Docker adapter implementation.
+- Success signal: deploy service invokes engine paths through a Docker adapter boundary, with tests proving start, stop, redeploy, and rollback behavior from service entrypoints.
 
 ---
 
@@ -66,6 +66,8 @@ Add repository tests for creating, loading, and updating a project with images, 
 
 Decision (2026-04-11): keep `state.Store` as the persistence facade name to stay backend-agnostic, while using SQLite as the current implementation detail for migrations and repository behavior.
 
+Status: complete. Project aggregate modeling and SQLite persistence are implemented, including migrations and repository methods for create/load/update with images, watched tags, credential references, and per-project update settings/state. Repository tests cover happy paths and transactional rollback behavior.
+
 ### Task 4: Docker adapter and deployment engine
 
 **Files:**
@@ -77,6 +79,10 @@ Decision (2026-04-11): keep `state.Store` as the persistence facade name to stay
 - `internal/deploy/strategy.go`
 
 Write tests for start, stop, redeploy, and rollback behavior against a fake Docker adapter. Implement the hybrid Docker backend and the deployment engine with a global deployment strategy. Compose-style projects should be manageable through one domain service.
+
+Decision (2026-04-18): deployment revision selection is request-driven in the engine (`RedeployRequest`, `RollbackRequest`). `Project.UpdateState` remains persisted metadata and should not be mixed as an implicit runtime control source for rollback/redeploy orchestration.
+
+Status: in progress. Engine domain contracts and behavior are implemented and covered by tests against a fake runtime adapter, including validation guards and rollback success/failure branches. Remaining work for Task 4 is wiring the deploy service entrypoints and implementing the concrete Docker adapter (`internal/adapters/docker`) plus strategy/rollback extraction files.
 
 ### Task 5: Registry/source monitoring and update checks
 
