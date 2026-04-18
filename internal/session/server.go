@@ -55,7 +55,7 @@ func (s *Server) Run() error {
 	}
 
 	errChan := make(chan error, 1)
-	s.log.Info("Starting SSH server", "host", s.config.Host, "port", s.config.Port)
+	s.log.Info("starting SSH server", "host", s.config.Host, "port", s.config.Port)
 	go func() {
 		if listenErr := serv.ListenAndServe(); listenErr != nil && !errors.Is(listenErr, ssh.ErrServerClosed) {
 			s.log.Error("Could not start server", "error", listenErr)

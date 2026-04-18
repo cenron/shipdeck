@@ -2,6 +2,8 @@ package state
 
 import (
 	"context"
+	"io"
+	"log/slog"
 	"testing"
 
 	"github.com/jmoiron/sqlx"
@@ -11,7 +13,7 @@ func TestMigrateCreatesAndSeedsSchemaVersion(t *testing.T) {
 	db := mustOpenTestDB(t)
 	t.Cleanup(func() { _ = db.Close() })
 
-	s := NewStore(db)
+	s := NewStore(db, testLogger())
 	if err := s.Migrate(context.Background()); err != nil {
 		t.Fatalf("Migrate() returned error: %v", err)
 	}
@@ -29,7 +31,7 @@ func TestMigrateIdempotent(t *testing.T) {
 	db := mustOpenTestDB(t)
 	t.Cleanup(func() { _ = db.Close() })
 
-	s := NewStore(db)
+	s := NewStore(db, testLogger())
 	if err := s.Migrate(context.Background()); err != nil {
 		t.Fatalf("first Migrate() failed: %v", err)
 	}
@@ -97,4 +99,8 @@ func mustOpenTestDB(t *testing.T) *sqlx.DB {
 		t.Fatalf("open sqlite db: %v", err)
 	}
 	return db
+}
+
+func testLogger() *slog.Logger {
+	return slog.New(slog.NewTextHandler(io.Discard, nil))
 }

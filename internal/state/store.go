@@ -6,6 +6,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"log/slog"
 	"sort"
 	"strconv"
 	"strings"
@@ -24,18 +25,21 @@ type migration struct {
 }
 
 type Store struct {
-	db *sqlx.DB
+	db  *sqlx.DB
+	log *slog.Logger
 }
 
 // NewStore constructs a persistence store backed by the provided database handle.
-func NewStore(db *sqlx.DB) *Store {
+func NewStore(db *sqlx.DB, log *slog.Logger) *Store {
 	return &Store{
-		db: db,
+		db:  db,
+		log: log,
 	}
 }
 
 // Migrate applies embedded SQL migrations in version order within a single transaction.
 func (s *Store) Migrate(ctx context.Context) error {
+	s.log.Info("running migrations...")
 	tx, err := s.db.BeginTxx(ctx, nil)
 	if err != nil {
 		return fmt.Errorf("begin migration transaction: %w", err)
@@ -59,9 +63,11 @@ func (s *Store) Migrate(ctx context.Context) error {
 
 	for _, m := range migrations {
 		if m.version <= currentVersion {
+			s.log.Info("skipping migration", "name", m.name)
 			continue
 		}
 
+		s.log.Info("applying migration", "name", m.name)
 		if _, err := tx.ExecContext(ctx, m.sql); err != nil {
 			return fmt.Errorf("apply migration v%d (%s): %w", m.version, m.name, err)
 		}
@@ -75,6 +81,31 @@ func (s *Store) Migrate(ctx context.Context) error {
 		return fmt.Errorf("commit migration transaction: %w", err)
 	}
 	return nil
+}
+
+// executeTx executes a query within a transaction, and rolls back on error
+func (s *Store) executeTx(ctx context.Context, query string, args ...any) (int64, error) {
+	tx, err := s.db.BeginTxx(ctx, nil)
+	if err != nil {
+		return 0, fmt.Errorf("starting transaction: %w", err)
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	result, err := tx.ExecContext(ctx, query, args...)
+	if err != nil {
+		return 0, fmt.Errorf("inserting snapshot: %w", err)
+	}
+
+	id, err := result.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("getting last insert id: %w", err)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return 0, fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return id, nil
 }
 
 // createSchemaVersionTable ensures the schema_version table exists and is seeded with version 0.

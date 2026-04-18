@@ -24,7 +24,7 @@ func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 	}
 	defer func() { _ = db.Close() }()
 
-	store := state.NewStore(db)
+	store := state.NewStore(db, log)
 	if err := store.Migrate(ctx); err != nil {
 		return err
 	}

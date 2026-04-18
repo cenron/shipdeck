@@ -13,3 +13,7 @@ Keep this file updated with mistakes, discoveries, and gotchas that matter for S
 - 2026-04-05
   - What happened: Task 1 started with a startup/composition test, and the app wiring ended up carrying DB open/migrate/bootstrap logic in `internal/app/wire.go`.
   - Takeaway: keep `main` thin, but accept a small bootstrap helper when the startup path is still the simplest place to compose config, logger, and persistence.
+
+- 2026-04-11
+  - What happened: While planning Task 3, naming was clarified to keep `state.Store` instead of renaming to a SQLite-specific type.
+  - Takeaway: keep top-level persistence naming backend-agnostic and treat SQLite as an implementation detail so future storage swaps do not force broad type renames.

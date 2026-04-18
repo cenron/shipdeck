@@ -22,8 +22,11 @@ out/
 *.log
 
 # Local SSH auth keys
-data/authorized_keys
 id_ed25519
 id_ed25519.pub
 **/id_ed25519
 **/id_ed25519.pub
+
+# Data directory (preserved with .gitkeep)
+data/
+

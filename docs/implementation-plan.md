@@ -8,6 +8,25 @@
 
 ---
 
+## Execution mode
+
+Implementation in this repo follows pair-programming navigator mode.
+
+- Use `docs/working-mode.md` as the collaboration contract.
+- Work in vertical slices with fast verification loops.
+- Use implementation details only when requested.
+- Prefer direction and outcome signals over rigid micro-task instructions.
+
+## Active slice tracking
+
+Keep this section updated as work moves so new sessions can continue smoothly.
+
+- Current direction: stabilize core deployment path from SSH session to persisted project state.
+- Current slice: Task 3 project model and SQLite persistence.
+- Success signal: create, load, and update project metadata through repository tests.
+
+---
+
 ### Task 1: Foundation and wiring
 
 **Files:**
@@ -32,6 +51,8 @@ Status: the initial constructor wiring and proof test are in place. The current 
 
 Add tests that prove valid SSH keys start a Bubble Tea session and invalid keys are rejected. Implement the Wish server, key lookup, and a minimal TUI shell that can render a placeholder dashboard. Keep the session layer separate from presentation.
 
+Status: complete. SSH entrypoint, authorized key enforcement, and Bubble Tea session startup are implemented and covered by tests for authorized and unauthorized keys. A minimal dashboard placeholder is in place in the TUI shell.
+
 ### Task 3: Project model and SQLite persistence
 
 **Files:**
@@ -42,6 +63,8 @@ Add tests that prove valid SSH keys start a Bubble Tea session and invalid keys 
 - `internal/state/repository.go`
 
 Add repository tests for creating, loading, and updating a project with images, watched tags, credentials, and per-project update settings. Then implement the SQLite schema and repository methods needed for project CRUD and secret references. SQLite is the source of truth for project metadata and update state.
+
+Decision (2026-04-11): keep `state.Store` as the persistence facade name to stay backend-agnostic, while using SQLite as the current implementation detail for migrations and repository behavior.
 
 ### Task 4: Docker adapter and deployment engine
 
