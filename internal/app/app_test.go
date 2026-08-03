@@ -44,20 +44,8 @@ func TestAppRun(t *testing.T) {
 		t.Fatalf("Run() returned error: %v", err)
 	}
 
-	wantActions := []string{"start", "stop", "stop", "deploy"}
-	if len(runtime.actions) != len(wantActions) {
-		t.Fatalf("expected %d runtime actions, got %d: %v", len(wantActions), len(runtime.actions), runtime.actions)
-	}
-	for i := range wantActions {
-		if runtime.actions[i] != wantActions[i] {
-			t.Fatalf("runtime action %d = %q, want %q", i, runtime.actions[i], wantActions[i])
-		}
-	}
-	if len(runtime.deployCalls) != 1 {
-		t.Fatalf("expected one deploy call, got %d", len(runtime.deployCalls))
-	}
-	if runtime.deployCalls[0] != "nginx:1.28-alpine" {
-		t.Fatalf("deploy revision = %q, want %q", runtime.deployCalls[0], "nginx:1.28-alpine")
+	if len(runtime.actions) != 0 {
+		t.Fatalf("expected no runtime actions during app startup, got %v", runtime.actions)
 	}
 }
 

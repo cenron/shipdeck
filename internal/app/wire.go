@@ -31,7 +31,10 @@ func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 		return err
 	}
 
-	r := docker.NewClient()
+	// Create our temporary config resolver
+	resolver := docker.SmokeComposeResolver{}
+
+	r := docker.NewClient(resolver)
 	e := deploy.NewEngine(r)
 	service := deploy.NewService(e)
 

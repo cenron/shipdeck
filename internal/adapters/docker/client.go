@@ -10,38 +10,31 @@ import (
 	"github.com/cenron/shipdeck/internal/deploy"
 )
 
-// composeProject holds the temporary Compose smoke-test inputs used by the Docker adapter.
-// These static values will move to the project/config boundary after the adapter path is proven.
-type composeProject struct {
-	file        string
-	projectName string
-	env         map[string]string
-}
-
 // Client executes Docker operations for deploy runtime actions.
-type Client struct{}
+type Client struct {
+	resolver ComposeSpecResolver
+}
 
 // NewClient constructs a Docker runtime adapter.
-func NewClient() *Client {
-	return &Client{}
-}
-
-// StartProject starts the project's Compose workload using the current smoke-test fixture.
-func (c *Client) StartProject(ctx context.Context, project deploy.Project) error {
-
-	name := strings.ToLower(project.Name)
-	compose := composeProject{
-		file:        "examples/compose-test.yml",
-		projectName: name,
-		env: map[string]string{
-			"SHIPDECK_TEST_IMAGE":     "nginx:1.27-alpine",
-			"SHIPDECK_TEST_CONTAINER": name + "-web",
-			"SHIPDECK_TEST_BIND":      "127.0.0.1",
-			"SHIPDECK_TEST_PORT":      "8088",
-		},
+func NewClient(r ComposeSpecResolver) *Client {
+	if r == nil {
+		panic("compose spec resolver must not be nil")
 	}
 
-	out, err := executeDocker(ctx, compose, "up")
+	return &Client{
+		resolver: r,
+	}
+}
+
+// StartProject starts the project's resolved Compose workload.
+func (c *Client) StartProject(ctx context.Context, project deploy.Project) error {
+
+	spec, err := c.resolver.Resolve(project, "")
+	if err != nil {
+		return err
+	}
+
+	out, err := executeDocker(ctx, spec, "up")
 	if err != nil {
 		return fmt.Errorf("docker compose up: %w: %s", err, string(out))
 	}
@@ -49,22 +42,15 @@ func (c *Client) StartProject(ctx context.Context, project deploy.Project) error
 	return nil
 }
 
-// StopProject stops the project's Compose workload using the current smoke-test fixture.
+// StopProject stops the project's resolved Compose workload.
 func (c *Client) StopProject(ctx context.Context, project deploy.Project) error {
-	fmt.Println("Stopping project", project.Name)
-	name := strings.ToLower(project.Name)
-	compose := composeProject{
-		file:        "examples/compose-test.yml",
-		projectName: name,
-		env: map[string]string{
-			"SHIPDECK_TEST_IMAGE":     "nginx:1.27-alpine",
-			"SHIPDECK_TEST_CONTAINER": name + "-web",
-			"SHIPDECK_TEST_BIND":      "127.0.0.1",
-			"SHIPDECK_TEST_PORT":      "8088",
-		},
+
+	spec, err := c.resolver.Resolve(project, "")
+	if err != nil {
+		return err
 	}
 
-	out, err := executeDocker(ctx, compose, "down")
+	out, err := executeDocker(ctx, spec, "down")
 	if err != nil {
 		return fmt.Errorf("docker compose down: %w: %s", err, string(out))
 	}
@@ -73,26 +59,18 @@ func (c *Client) StopProject(ctx context.Context, project deploy.Project) error 
 }
 
 // DeployRevision deploys a requested project revision.
-// It is the remaining adapter method to implement for redeploy and rollback paths.
 func (c *Client) DeployRevision(ctx context.Context, project deploy.Project, revision string) error {
-	name := strings.ToLower(project.Name)
 	revision = strings.TrimSpace(revision)
 	if revision == "" {
 		return fmt.Errorf("revision must not be empty")
 	}
 
-	compose := composeProject{
-		file:        "examples/compose-test.yml",
-		projectName: name,
-		env: map[string]string{
-			"SHIPDECK_TEST_IMAGE":     revision,
-			"SHIPDECK_TEST_CONTAINER": name + "-web",
-			"SHIPDECK_TEST_BIND":      "127.0.0.1",
-			"SHIPDECK_TEST_PORT":      "8088",
-		},
+	spec, err := c.resolver.Resolve(project, revision)
+	if err != nil {
+		return err
 	}
 
-	out, err := executeDocker(ctx, compose, "up")
+	out, err := executeDocker(ctx, spec, "up")
 	if err != nil {
 		return fmt.Errorf("docker compose up: %w: %s", err, string(out))
 	}
@@ -110,14 +88,14 @@ func composeEnv(values map[string]string) []string {
 }
 
 // executeDocker runs a Docker Compose action and returns the combined stdout/stderr output.
-func executeDocker(ctx context.Context, compose composeProject, action string) ([]byte, error) {
+func executeDocker(ctx context.Context, spec ComposeSpec, action string) ([]byte, error) {
 
 	args := []string{
 		"compose",
 		"-f",
-		compose.file,
+		spec.File,
 		"-p",
-		compose.projectName,
+		spec.ProjectName,
 		action,
 	}
 
@@ -131,6 +109,6 @@ func executeDocker(ctx context.Context, compose composeProject, action string) (
 		args...,
 	)
 
-	cmd.Env = composeEnv(compose.env)
+	cmd.Env = composeEnv(spec.Env)
 	return cmd.CombinedOutput()
 }

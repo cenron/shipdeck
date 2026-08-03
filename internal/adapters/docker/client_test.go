@@ -33,7 +33,7 @@ printf 'ok\n'
 	t.Setenv("SHIPDECK_DOCKER_LOG", logPath)
 	t.Setenv("SHIPDECK_DOCKER_ENV_LOG", envPath)
 
-	client := NewClient()
+	client := NewClient(SmokeComposeResolver{})
 	project := deploy.Project{Name: "Test"}
 
 	if err := client.StartProject(context.Background(), project); err != nil {
@@ -83,4 +83,20 @@ printf 'ok\n'
 			t.Fatalf("docker env call %d = %q, want %q", i, envLines[i], wantEnv[i])
 		}
 	}
+}
+
+func TestNewClientPanicsWhenResolverNil(t *testing.T) {
+	t.Parallel()
+
+	defer func() {
+		r := recover()
+		if r == nil {
+			t.Fatal("expected NewClient(nil) to panic")
+		}
+		if msg, ok := r.(string); !ok || msg != "compose spec resolver must not be nil" {
+			t.Fatalf("expected panic message %q, got %#v", "compose spec resolver must not be nil", r)
+		}
+	}()
+
+	_ = NewClient(nil)
 }

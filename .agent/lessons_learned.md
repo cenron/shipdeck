@@ -37,3 +37,7 @@ Keep this file updated with mistakes, discoveries, and gotchas that matter for S
 - 2026-08-03
   - What happened: Adding redeploy to `App.Run` made signal/cancel tests fail because the test cancelled the context before the longer smoke sequence reached the SSH server shutdown path.
   - Takeaway: when `App.Run` grows temporary smoke actions with sleeps, update cancellation-based tests so context cancellation happens after the smoke sequence or replace sleeps with a controllable boundary.
+
+- 2026-08-03
+  - What happened: Temporary Docker Compose smoke actions in `App.Run` proved the adapter path but made normal startup behave like a deploy workflow.
+  - Takeaway: keep deploy smoke tests in adapter/service tests or an explicit dev-only command; normal app startup should compose services and return control without running project lifecycle actions.

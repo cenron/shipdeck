@@ -64,6 +64,14 @@ shipdeck/
 - Local-only HTTP API
 - SQLite-backed metadata
 
+## Compose project assets
+
+For the MVP, production Compose files are imported from the operator and copied into Shipdeck-owned project storage. Shipdeck treats the managed copy as the deploy source and does not mutate either the original file or the managed copy during deploy operations.
+
+The Docker adapter only executes a resolved Compose runtime spec: Compose file path, Compose project name, and runtime environment values. Importing Compose files, choosing managed storage paths, tracking project metadata, and any future project-composition behavior belong outside the adapter.
+
+Post-MVP, Shipdeck may add explicit project-composition workflows for managed service templates such as Postgres or Redis. Those workflows should be visible user actions, not hidden side effects of deployment.
+
 ## Extensibility
 
 - Keep external systems behind narrow interfaces.
