@@ -2,7 +2,6 @@ package docker
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -47,9 +46,7 @@ func (c *Client) StartProject(ctx context.Context, project deploy.Project) error
 		return fmt.Errorf("docker compose up: %w: %s", err, string(out))
 	}
 
-	fmt.Println(string(out))
 	return nil
-
 }
 
 // StopProject stops the project's Compose workload using the current smoke-test fixture.
@@ -72,15 +69,35 @@ func (c *Client) StopProject(ctx context.Context, project deploy.Project) error 
 		return fmt.Errorf("docker compose down: %w: %s", err, string(out))
 	}
 
-	fmt.Println(string(out))
 	return nil
 }
 
 // DeployRevision deploys a requested project revision.
 // It is the remaining adapter method to implement for redeploy and rollback paths.
-func (c *Client) DeployRevision(_ context.Context, project deploy.Project, revision string) error {
-	return errors.New("not implemented")
+func (c *Client) DeployRevision(ctx context.Context, project deploy.Project, revision string) error {
+	name := strings.ToLower(project.Name)
+	revision = strings.TrimSpace(revision)
+	if revision == "" {
+		return fmt.Errorf("revision must not be empty")
+	}
 
+	compose := composeProject{
+		file:        "examples/compose-test.yml",
+		projectName: name,
+		env: map[string]string{
+			"SHIPDECK_TEST_IMAGE":     revision,
+			"SHIPDECK_TEST_CONTAINER": name + "-web",
+			"SHIPDECK_TEST_BIND":      "127.0.0.1",
+			"SHIPDECK_TEST_PORT":      "8088",
+		},
+	}
+
+	out, err := executeDocker(ctx, compose, "up")
+	if err != nil {
+		return fmt.Errorf("docker compose up: %w: %s", err, string(out))
+	}
+
+	return nil
 }
 
 // composeEnv merges Compose-specific environment values into the current process environment.

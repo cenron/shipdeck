@@ -33,3 +33,7 @@ Keep this file updated with mistakes, discoveries, and gotchas that matter for S
 - 2026-08-02
   - What happened: Local development startup failed because Wish requires the configured authorized keys file to exist before the SSH server is created.
   - Takeaway: development runs can bootstrap an ignored `data/authorized_keys` from a local public key in the Makefile, but production auth material should remain explicit/generated outside the dev helper.
+
+- 2026-08-03
+  - What happened: Adding redeploy to `App.Run` made signal/cancel tests fail because the test cancelled the context before the longer smoke sequence reached the SSH server shutdown path.
+  - Takeaway: when `App.Run` grows temporary smoke actions with sleeps, update cancellation-based tests so context cancellation happens after the smoke sequence or replace sleeps with a controllable boundary.

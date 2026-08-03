@@ -42,6 +42,9 @@ printf 'ok\n'
 	if err := client.StopProject(context.Background(), project); err != nil {
 		t.Fatalf("StopProject() returned error: %v", err)
 	}
+	if err := client.DeployRevision(context.Background(), project, "  nginx:1.28-alpine  "); err != nil {
+		t.Fatalf("DeployRevision() returned error: %v", err)
+	}
 
 	logBytes, err := os.ReadFile(logPath)
 	if err != nil {
@@ -51,6 +54,7 @@ printf 'ok\n'
 	want := []string{
 		"compose -f examples/compose-test.yml -p test up -d",
 		"compose -f examples/compose-test.yml -p test down",
+		"compose -f examples/compose-test.yml -p test up -d",
 	}
 	if len(lines) != len(want) {
 		t.Fatalf("expected %d docker calls, got %d: %q", len(want), len(lines), lines)
@@ -66,9 +70,17 @@ printf 'ok\n'
 		t.Fatalf("read docker env log: %v", err)
 	}
 	envLines := strings.Split(strings.TrimSpace(string(envBytes)), "\n")
-	for i, line := range envLines {
-		if line != "nginx:1.27-alpine|test-web|127.0.0.1|8088" {
-			t.Fatalf("docker env call %d = %q", i, line)
+	wantEnv := []string{
+		"nginx:1.27-alpine|test-web|127.0.0.1|8088",
+		"nginx:1.27-alpine|test-web|127.0.0.1|8088",
+		"nginx:1.28-alpine|test-web|127.0.0.1|8088",
+	}
+	if len(envLines) != len(wantEnv) {
+		t.Fatalf("expected %d docker env calls, got %d: %q", len(wantEnv), len(envLines), envLines)
+	}
+	for i := range wantEnv {
+		if envLines[i] != wantEnv[i] {
+			t.Fatalf("docker env call %d = %q, want %q", i, envLines[i], wantEnv[i])
 		}
 	}
 }

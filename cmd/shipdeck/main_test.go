@@ -79,7 +79,7 @@ func TestRunShutsDownOnSignal(t *testing.T) {
 	t.Cleanup(func() { _ = os.Chdir(wd) })
 
 	go func() {
-		time.Sleep(2500 * time.Millisecond)
+		time.Sleep(4500 * time.Millisecond)
 		_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
 	}()
 

@@ -40,7 +40,7 @@ func TestWireWithCancelledContext(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	go func() {
-		time.Sleep(2500 * time.Millisecond)
+		time.Sleep(4500 * time.Millisecond)
 		cancel()
 	}()
 

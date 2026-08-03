@@ -45,10 +45,26 @@ func (app *App) Run(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-
+	
 	time.Sleep(2 * time.Second)
 
 	fmt.Println("Down")
 	err = app.service.StopProject(ctx, prj)
+	if err != nil {
+		return err
+	}
+
+	time.Sleep(2 * time.Second)
+
+	fmt.Println("Revision")
+	err = app.service.RedeployProject(ctx, deploy.RedeployRequest{
+		Project:          prj,
+		TargetRevision:   "nginx:1.28-alpine",
+		PreviousRevision: "nginx:1.27-alpine",
+	})
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
