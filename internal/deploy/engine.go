@@ -18,7 +18,7 @@ type Engine struct {
 	runtime Runtime
 }
 
-// NewEngine constructs an Engine with the runtime adapter used for deploy actions.
+// NewEngine constructs an Engine with the runtime adapters used for deploy actions.
 func NewEngine(runtime Runtime) *Engine {
 	if runtime == nil {
 		panic("runtime must not be nil")
@@ -29,12 +29,12 @@ func NewEngine(runtime Runtime) *Engine {
 	}
 }
 
-// Start delegates project start to the runtime adapter.
+// Start delegates project start to the runtime adapters.
 func (e *Engine) Start(ctx context.Context, project Project) error {
 	return e.runtime.StartProject(ctx, project)
 }
 
-// Stop delegates project stop to the runtime adapter.
+// Stop delegates project stop to the runtime adapters.
 func (e *Engine) Stop(ctx context.Context, project Project) error {
 	return e.runtime.StopProject(ctx, project)
 }

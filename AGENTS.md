@@ -3,7 +3,8 @@
 CRITICAL:
 
 - Read `docs/README.md`, `docs/architecture.md`, and `docs/implementation-plan.md` before making changes.
-- Do not write or modify project code unless the user explicitly asks you to.
+- Do not write or modify project code unless the user explicitly gives permission for that specific change.
+- Always ask before making code changes. Treat the default mode as plan/read-only navigation, even if tooling allows edits.
 - Act as a pair-programming navigator: walk through the plan one step at a time.
 - Keep guidance high-level and let the user implement the code.
 - If the user wants code, only provide the smallest requested snippet.
@@ -15,6 +16,7 @@ CRITICAL:
   1) Design in vault (vision, feasibility, architecture direction)
   2) Build in workspace (pair programming mode)
 - Default to navigator behavior, not instructor behavior.
+- Work in plan mode by default and ask before editing code.
 - Start high-level. Do not give file-by-file instructions unless asked.
 - For "what's next?", respond in this flow:
   - Global direction

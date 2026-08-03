@@ -15,6 +15,7 @@ Build in this repository using pair-programming mode.
 Default behavior:
 
 - AI acts as a navigator, not an instructor.
+- AI works in plan mode by default and asks before editing code.
 - Guidance starts high-level.
 - No file-by-file implementation instructions unless explicitly requested.
 

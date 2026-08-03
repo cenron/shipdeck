@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/cenron/shipdeck/internal/adapters/docker"
 	"github.com/cenron/shipdeck/internal/config"
+	"github.com/cenron/shipdeck/internal/deploy"
 	"github.com/cenron/shipdeck/internal/session"
 	"github.com/cenron/shipdeck/internal/state"
 	"github.com/jmoiron/sqlx"
@@ -29,8 +31,12 @@ func Wire(ctx context.Context, cfg config.Config, log *slog.Logger) error {
 		return err
 	}
 
-	a := NewApp(&cfg, log, store)
-	err = a.Run()
+	r := docker.NewClient()
+	e := deploy.NewEngine(r)
+	service := deploy.NewService(e)
+
+	a := NewApp(&cfg, log, store, service)
+	err = a.Run(ctx)
 	if err != nil {
 		return err
 	}

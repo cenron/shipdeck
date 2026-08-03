@@ -59,8 +59,27 @@ func TestRunShutsDownOnSignal(t *testing.T) {
 	t.Setenv("DB_PATH", filepath.Join(tmp, "shipdeck.sqlite"))
 	t.Setenv("AUTHORIZED_KEYS_PATH", authPath)
 
+	binDir := filepath.Join(tmp, "bin")
+	if err := os.MkdirAll(binDir, 0o755); err != nil {
+		t.Fatalf("make fake bin dir: %v", err)
+	}
+	fakeDocker := filepath.Join(binDir, "docker")
+	if err := os.WriteFile(fakeDocker, []byte("#!/bin/sh\nprintf 'ok\\n'\n"), 0o755); err != nil {
+		t.Fatalf("write fake docker: %v", err)
+	}
+	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
+
+	wd, err := os.Getwd()
+	if err != nil {
+		t.Fatalf("get working dir: %v", err)
+	}
+	if err := os.Chdir(filepath.Join(wd, "..", "..")); err != nil {
+		t.Fatalf("change to repo root: %v", err)
+	}
+	t.Cleanup(func() { _ = os.Chdir(wd) })
+
 	go func() {
-		time.Sleep(150 * time.Millisecond)
+		time.Sleep(2500 * time.Millisecond)
 		_ = syscall.Kill(os.Getpid(), syscall.SIGTERM)
 	}()
 

@@ -21,9 +21,10 @@ Implementation in this repo follows pair-programming navigator mode.
 
 Keep this section updated as work moves so new sessions can continue smoothly.
 
-- Current direction: complete Task 4 by wiring deploy service orchestration to a concrete Docker adapter.
-- Current slice: Task 4 service layer plus Docker adapter implementation.
-- Success signal: deploy service invokes engine paths through a Docker adapter boundary, with tests proving start, stop, redeploy, and rollback behavior from service entrypoints.
+- Current direction: complete Task 4 by turning the service/engine path into a real Compose-backed Docker runtime adapter.
+- Current slice: Docker Compose adapter smoke path. `deploy.Service` is wired into `App`, `internal/adapters/docker` exists, `examples/compose-test.yml` is available for local `docker compose` testing, and `StartProject`/`StopProject` now invoke `docker compose up -d` and `docker compose down` through the adapter.
+- Success signal: service entrypoints invoke engine paths through the Docker adapter, local Compose start/stop works from the adapter, adapter tests prove the Compose command/env shape, and the overall test suite passes without requiring real Docker.
+- Next pickup point: implement `DeployRevision` using the same Compose smoke fixture, mapping the requested revision into the image env value so redeploy and rollback can be proven through the Docker adapter. The duplicated static Compose values are acceptable for the smoke slice and should move to a project/config boundary after the adapter path is proven.
 
 ---
 
@@ -82,7 +83,7 @@ Write tests for start, stop, redeploy, and rollback behavior against a fake Dock
 
 Decision (2026-04-18): deployment revision selection is request-driven in the engine (`RedeployRequest`, `RollbackRequest`). `Project.UpdateState` remains persisted metadata and should not be mixed as an implicit runtime control source for rollback/redeploy orchestration.
 
-Status: in progress. Engine domain contracts and behavior are implemented and covered by tests against a fake runtime adapter, including validation guards and rollback success/failure branches. Remaining work for Task 4 is wiring the deploy service entrypoints and implementing the concrete Docker adapter (`internal/adapters/docker`) plus strategy/rollback extraction files.
+Status: in progress. Engine domain contracts and behavior are implemented and covered by tests against a fake runtime adapter, including validation guards and rollback success/failure branches. The deploy service is now wired through app composition and delegates into the engine. A first Docker adapter scaffold exists at `internal/adapters/docker`, and `examples/compose-test.yml` can be used as the local Compose smoke fixture. `StartProject` and `StopProject` now run Compose commands through a shared command executor, with adapter tests covering the generated `up -d`/`down` commands and smoke environment values. Overall tests use a fake Docker executable so normal verification does not require real Docker. Next cleanup is to implement `DeployRevision` with the fixture image value replaced by the requested revision, then move Compose file/project metadata onto the project/config boundary instead of hard-coding fixture paths in the adapter. Also update service-level tests and finish start/stop/redeploy/rollback behavior through the service boundary.
 
 ### Task 5: Registry/source monitoring and update checks
 

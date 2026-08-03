@@ -25,3 +25,11 @@ Keep this file updated with mistakes, discoveries, and gotchas that matter for S
 - 2026-04-18
   - What happened: Some tests instantiated `Engine` directly and bypassed `NewEngine`, weakening constructor invariant coverage.
   - Takeaway: in tests and production wiring, instantiate through constructors so dependency invariants (for example, non-nil runtime) are enforced consistently.
+
+- 2026-08-02
+  - What happened: While smoke-testing the Docker Compose adapter, `exec.Command` was called with grouped flag strings like `"-f examples/compose-test.yml"` and `"-p Test"`, which produced an opaque `exit status 1`.
+  - Takeaway: pass Docker CLI args as separate values to `exec.CommandContext`, capture `CombinedOutput` for stderr, and keep Compose project names lowercase such as `shipdeck-test`.
+
+- 2026-08-02
+  - What happened: Local development startup failed because Wish requires the configured authorized keys file to exist before the SSH server is created.
+  - Takeaway: development runs can bootstrap an ignored `data/authorized_keys` from a local public key in the Makefile, but production auth material should remain explicit/generated outside the dev helper.

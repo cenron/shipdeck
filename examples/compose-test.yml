@@ -1,0 +1,9 @@
+services:
+  web:
+    image: ${SHIPDECK_TEST_IMAGE:-nginx:1.27-alpine}
+    container_name: ${SHIPDECK_TEST_CONTAINER:-shipdeck-test-web}
+    ports:
+      - "${SHIPDECK_TEST_BIND:-127.0.0.1}:${SHIPDECK_TEST_PORT:-8088}:80"
+    labels:
+      shipdeck.project: "compose-test"
+      shipdeck.service: "web"
